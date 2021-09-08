@@ -15,18 +15,20 @@ else
 	}
 
 	language.Add("tool.modeledit.name", "Model")
-	language.Add("tool.modeledit.desc", "Grab and set any model you want!")
-	language.Add("tool.modeledit.left", "Set model")
-	language.Add("tool.modeledit.right", "Get model")
+	language.Add("tool.modeledit.desc", "Swap around any model you want!")
+	language.Add("tool.modeledit.left", "Set an entity\'s model")
+	language.Add("tool.modeledit.right", "Get an entity\'s model")
 
 	net.Receive("ModelEditString", function()
 		local mdl = net.ReadString()
 
 		if net.ReadBool() then
-			notification.AddLegacy("Set model to \"" .. mdl .. "\"", 0, 3)
+			notification.AddLegacy("Set model to \"" .. mdl .. "\"", 0, 5)
 		else
-			notification.AddLegacy("Got model \"" .. mdl .. "\"", 0, 3)
+			notification.AddLegacy("Got model \"" .. mdl .. "\"", 0, 5)
 		end
+
+		surface.PlaySound("ambient/water/drip" .. math.random(1, 4) .. ".wav")
 	end)
 end
 
@@ -54,6 +56,7 @@ function TOOL:RightClick(tr)
 	if IsValid(ent) then
 		if SERVER then
 			local mdl = ent:GetModel()
+			if not util.IsValidModel(mdl) then return false end
 			owner:ConCommand("modeledit_model " .. mdl)
 			net.Start("ModelEditString")
 			net.WriteString(mdl)
