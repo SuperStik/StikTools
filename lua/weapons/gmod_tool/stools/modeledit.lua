@@ -55,7 +55,7 @@ function TOOL:LeftClick(tr)
 
 			return true
 		else
-			self:GetOwner():SendLua("notification.AddLegacy('No valid model or entity selected!',1,5)surface.PlaySound('buttons/button10.wav')")
+			self:GetOwner():SendLua("notification.AddLegacy('No valid model selected!',1,5)surface.PlaySound('buttons/button10.wav')")
 		end
 	end
 end
