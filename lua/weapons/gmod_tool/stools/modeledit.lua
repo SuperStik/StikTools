@@ -5,6 +5,20 @@ TOOL.ClientConVar["model"] = ""
 if SERVER then
 	util.AddNetworkString("ModelEditString")
 else
+	TOOL.Information = {
+		{
+			name = "left"
+		},
+		{
+			name = "right"
+		}
+	}
+
+	language.Add("tool.modeledit.name", "Model")
+	language.Add("tool.modeledit.desc", "Grab and set any model you want!")
+	language.Add("tool.modeledit.left", "Set model")
+	language.Add("tool.modeledit.right", "Get model")
+
 	net.Receive("ModelEditString", function()
 		local mdl = net.ReadString()
 
