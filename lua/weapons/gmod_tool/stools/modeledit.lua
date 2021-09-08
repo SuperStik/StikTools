@@ -5,6 +5,8 @@ TOOL.ClientConVar["model"] = ""
 if SERVER then
 	util.AddNetworkString("ModelEditString")
 else
+	local model = language.GetPhrase("model"):sub(1, -2) .. ":"
+
 	TOOL.Information = {
 		{
 			name = "left"
@@ -23,7 +25,7 @@ else
 		})
 
 		panel:AddControl("textbox", {
-			label = "Model:",
+			label = model,
 			command = "modeledit_model"
 		})
 	end
