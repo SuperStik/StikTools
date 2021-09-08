@@ -12,13 +12,24 @@ else
 		{
 			name = "right"
 		},
-	{
-		name = "reload"
-	}
+		{
+			name = "reload"
+		}
 	}
 
+	function TOOL.BuildCPanel(panel)
+		panel:AddControl("header", {
+			description = "#tool.modeledit.desc"
+		})
+
+		panel:AddControl("textbox", {
+			label = "Model:",
+			command = "modeledit_model"
+		})
+	end
+
 	language.Add("tool.modeledit.name", "Model")
-	language.Add("tool.modeledit.desc", "Swap around any model you want!")
+	language.Add("tool.modeledit.desc", "Swap around models")
 	language.Add("tool.modeledit.left", "Set an entity\'s model")
 	language.Add("tool.modeledit.right", "Get an entity\'s model")
 	language.Add("tool.modeledit.reload", "Set player model to selected model")
