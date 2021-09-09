@@ -4,6 +4,21 @@ TOOL.ClientConVar["model"] = ""
 
 if SERVER then
 	util.AddNetworkString("ModelEditString")
+
+	function TOOL:Reload()
+		local owner = self:GetOwner()
+		local mdl = self:GetClientInfo("model")
+
+		if IsValid(owner) and util.IsValidModel(mdl) and SERVER then
+			owner:SetModel(mdl)
+			net.Start("ModelEditString")
+			net.WriteString(mdl)
+			net.WriteUInt(2, 2)
+			net.Send(owner)
+		else
+			owner:SendLua("notification.AddLegacy('No valid model selected!',1,5)surface.PlaySound('buttons/button10.wav')")
+		end
+	end
 else
 	local model = language.GetPhrase("model"):sub(1, -2) .. ":"
 
@@ -95,20 +110,5 @@ function TOOL:RightClick(tr)
 		end
 
 		return true
-	end
-end
-
-function TOOL:Reload()
-	local owner = self:GetOwner()
-	local mdl = self:GetClientInfo("model")
-
-	if IsValid(owner) and util.IsValidModel(mdl) and SERVER then
-		owner:SetModel(mdl)
-		net.Start("ModelEditString")
-		net.WriteString(mdl)
-		net.WriteUInt(2, 2)
-		net.Send(owner)
-	else
-		owner:SendLua("notification.AddLegacy('No valid model selected!',1,5)surface.PlaySound('buttons/button10.wav')")
 	end
 end
