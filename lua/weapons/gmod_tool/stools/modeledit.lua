@@ -82,7 +82,7 @@ function TOOL:LeftClick(tr)
 			end
 
 			return true
-		else
+		elseif SERVER then
 			self:GetOwner():SendLua("notification.AddLegacy('No valid model selected!',1,5)surface.PlaySound('buttons/button10.wav')")
 		end
 	end
