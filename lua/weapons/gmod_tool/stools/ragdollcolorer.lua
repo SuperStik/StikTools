@@ -29,9 +29,13 @@ local function validateEntityTable(tab)
 	return tbl
 end
 
+local function customColor(self)
+	return self:GetNWVector("stikragdollcolorer", def_ply_color)
+end
+
 local function setColor(Entity)
 	if IsValid(Entity) then
-		Entity.GetPlayerColor = function() return Entity:GetNWVector("stikragdollcolorer", def_ply_color) end
+		Entity.GetPlayerColor = customColor
 	end
 
 	if CLIENT then return end
@@ -57,7 +61,7 @@ end)
 
 if SERVER then
 	hook.Add("PlayerSpawn", "NetworkRagdollColors", function()
-		if not table.IsEmpty(enttbl) then
+		if next(enttbl) ~= 0 then
 			setColor()
 		end
 	end)
@@ -124,7 +128,8 @@ function TOOL:RightClick(trace)
 	if IsValid(ent) then
 		if CLIENT then return true end
 		if isfunction(ent.GetPlayerColor) then
-			local vec = ent:GetPlayerColor()*255
+			local vec = ent:GetPlayerColor()
+			vec:Mul(255)
 			owner:ConCommand("ragdollcolorer_r " .. math.floor(vec.x))
 			owner:ConCommand("ragdollcolorer_g " .. math.floor(vec.y))
 			owner:ConCommand("ragdollcolorer_b " .. math.floor(vec.z))
@@ -145,7 +150,7 @@ function TOOL:Reload(trace)
 		if CLIENT then return true end
 		ent.GetPlayerColor = nil
 		duplicator.ClearEntityModifier(ent, "stikRagdollColor")
-		ent:SetNWVector("stikragdollcolorer", nil)
+		ent:SetNWVector("stikragdollcolorer")
 		enttbl[ent:EntIndex()] = NULL
 		net.Start("noragcoltoclient")
 		net.WriteEntity(ent)
@@ -161,9 +166,9 @@ local function BuildCPanel(panel, convar)
 	local button = vgui.Create("DButton")
 	button:SetText("Randomize Colors")
 	function button:DoClick()
-		RunConsoleCommand("ragdollcolorer_r", tostring(math.random(0,255)))
-		RunConsoleCommand("ragdollcolorer_g", tostring(math.random(0,255)))
-		RunConsoleCommand("ragdollcolorer_b", tostring(math.random(0,255)))
+		RunConsoleCommand("ragdollcolorer_r", math.random(0,255))
+		RunConsoleCommand("ragdollcolorer_g", math.random(0,255))
+		RunConsoleCommand("ragdollcolorer_b", math.random(0,255))
 	end
 	panel:Help("Recolor a ragdoll or prop\'s proxy material")
 	panel:AddControl("combobox",{
