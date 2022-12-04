@@ -83,8 +83,8 @@ if CLIENT then
 	language.Add("tool.ragdollcolorer.name", language.GetPhrase("ragdollcolorer"))
 	language.Add("tool.ragdollcolorer.desc", "Color a ragdoll the right way")
 	language.Add("tool.ragdollcolorer.left", "Color a ragdoll or prop")
-	language.Add("tool.ragdollcolorer.right", "Copy a ragdoll\'s color")
-	language.Add("tool.ragdollcolorer.reload", "Erase a ragdoll\'s color")
+	language.Add("tool.ragdollcolorer.right", "Copy a ragdoll's color")
+	language.Add("tool.ragdollcolorer.reload", "Erase a ragdoll's color")
 
 	net.Receive("ragdolltblclient", function()
 		local count = net.ReadUInt(16)

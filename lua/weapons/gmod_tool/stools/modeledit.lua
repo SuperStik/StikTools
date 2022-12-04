@@ -1,4 +1,4 @@
-TOOL.Category = "Construction"
+TOOL.Category = "Render"
 TOOL.Name = "Model"
 TOOL.ClientConVar["model"] = ""
 
@@ -47,8 +47,8 @@ else
 
 	language.Add("tool.modeledit.name", "Model")
 	language.Add("tool.modeledit.desc", "Swap around models")
-	language.Add("tool.modeledit.left", "Set an entity\'s model")
-	language.Add("tool.modeledit.right", "Get an entity\'s model")
+	language.Add("tool.modeledit.left", "Set an entity's model")
+	language.Add("tool.modeledit.right", "Get an entity's model")
 	language.Add("tool.modeledit.reload", "Set player model to selected model")
 
 	net.Receive("ModelEditString", function()
