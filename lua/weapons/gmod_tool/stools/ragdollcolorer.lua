@@ -162,7 +162,7 @@ end
 
 local ConVarsDefault = TOOL:BuildConVarList()
 
-local function BuildCPanel(panel, convar)
+function TOOL.BuildCPanel(panel)
 	local button = vgui.Create("DButton")
 	button:SetText("Randomize Colors")
 	function button:DoClick()
@@ -184,9 +184,4 @@ local function BuildCPanel(panel, convar)
 		blue = "ragdollcolorer_b"
 	})
 	panel:AddPanel(button)
-end
-
-function TOOL.BuildCPanel(panel)
-	local ragrgb = GetConVar("ragdollcolorer_rgb")
-	BuildCPanel(panel, ragrgb)
 end
