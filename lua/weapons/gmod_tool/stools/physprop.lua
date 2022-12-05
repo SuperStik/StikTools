@@ -9,7 +9,7 @@ TOOL.ClientConVar[ "gravity_toggle" ] = "1"
 TOOL.ClientConVar[ "material" ] = "metal_bouncy"
 TOOL.ClientConVar[ "defaults_toggle" ] = "0"
 TOOL.ClientConVar[ "motion_toggle" ] = "1"
-TOOL.ClientConVar[ "mass" ] = "0"
+TOOL.ClientConVar[ "mass" ] = "100"
 TOOL.ClientConVar[ "drag_toggle" ] = "1"
 TOOL.ClientConVar[ "drag" ] = "0"
 TOOL.ClientConVar[ "buoyancy" ] = "0"
@@ -68,7 +68,8 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:CheckBox("Enable Motion", "physprop_motion_toggle")
 
-	CPanel:NumSlider("Mass", "physprop_mass", 1.192092896e-07, 2000, 2)
+	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
+	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
 
 end
 
