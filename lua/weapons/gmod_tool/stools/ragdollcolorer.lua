@@ -12,7 +12,7 @@ local function validateEntityTable(tab)
 	local tbl = {}
 
 	for k, v in pairs(tab) do
-		if v:IsValid then
+		if v:IsValid() then
 			tbl[k] = v
 		end
 	end
