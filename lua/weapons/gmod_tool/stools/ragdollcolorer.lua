@@ -12,7 +12,7 @@ local function validateEntityTable(tab)
 	local tbl = {}
 
 	for k, v in pairs(tab) do
-		if IsValid(v) then
+		if v:IsValid then
 			tbl[k] = v
 		end
 	end
@@ -26,7 +26,7 @@ end
 
 -- this function does way too much, but I'm too lazy to fix it
 local function setColor(Entity)
-	if IsValid(Entity) then
+	if Entity:IsValid() then
 		Entity.GetPlayerColor = customColor
 
 		if SERVER then
@@ -150,7 +150,7 @@ end
 function TOOL:LeftClick(trace)
 	local ent = hook.Call("RagdollColorOverride", STIK, trace.Entity)
 
-	if IsValid(ent) then
+	if ent:IsValid() then
 		if CLIENT then return true end
 		local color_r = self:GetClientNumber("r")
 		local color_g = self:GetClientNumber("g")
@@ -167,7 +167,7 @@ function TOOL:RightClick(trace)
 	local ent = hook.Call("RagdollColorOverride", STIK, trace.Entity)
 	local owner = self:GetOwner()
 
-	if IsValid(ent) then
+	if ent:IsValid() then
 		if CLIENT then return true end
 
 		if isfunction(ent.GetPlayerColor) then
