@@ -5,17 +5,7 @@ TOOL.ClientConVar["g"] = "88"
 TOOL.ClientConVar["b"] = "106"
 local def_ply_color = Vector(62, 88, 106)/255
 
-local enttbl = {}
-
-
-if SERVER then
-	util.AddNetworkString("ragdolltblclient")
-	util.AddNetworkString("noragcoltoclient")
-
-	function ColorEntityTable()
-		return enttbl
-	end
-end
+local enttbl
 
 local function validateEntityTable(tab)
 	local tbl = {}
@@ -33,24 +23,40 @@ local function customColor(self)
 	return self:GetNWVector("stikragdollcolorer", def_ply_color)
 end
 
-local function setColor(Entity)
+local function setColor(Entity) -- this function does way too much, but I'm too lazy to fix it
 	if IsValid(Entity) then
 		Entity.GetPlayerColor = customColor
+		if SERVER then
+			duplicator.StoreEntityModifier(Entity, "stikRagdollColor", {Entity:GetNWVector("stikragdollcolorer", def_ply_color)})
+		end
 	end
 
 	if CLIENT then return end
 	enttbl = validateEntityTable(enttbl)
 	local count = table.Count(enttbl)
 	net.Start("ragdolltblclient")
-	net.WriteUInt(count, 16)
-
+	net.WriteBit(false)
+	net.WriteUInt(count, 13)
 	for k, v in pairs(enttbl) do
 		net.WriteEntity(v)
-
-		duplicator.StoreEntityModifier(v, "stikRagdollColor", {v:GetNWVector("stikragdollcolorer", def_ply_color)})
 	end
 
 	net.Broadcast()
+end
+
+if SERVER then
+	enttbl = {}
+	util.AddNetworkString("ragdolltblclient")
+
+	function RagdollColorEntityTable() -- in case someone wants to be crazy and access the table
+		return enttbl
+	end
+
+	hook.Add("PlayerSpawn", "NetworkRagdollColors", function()
+		if next(enttbl) ~= 0 then
+			setColor()
+		end
+	end)
 end
 
 duplicator.RegisterEntityModifier("stikRagdollColor", function(_, ent, data)
@@ -59,16 +65,7 @@ duplicator.RegisterEntityModifier("stikRagdollColor", function(_, ent, data)
 	setColor(ent)
 end)
 
-if SERVER then
-	hook.Add("PlayerSpawn", "NetworkRagdollColors", function()
-		if next(enttbl) ~= 0 then
-			setColor()
-		end
-	end)
-end
-
 if CLIENT then
-	enttbl = nil
 	local ent = NULL
 
 	TOOL.Information = {
@@ -91,17 +88,16 @@ if CLIENT then
 	language.Add("tool.ragdollcolorer.reload", "Erase a ragdoll's color")
 
 	net.Receive("ragdolltblclient", function()
-		local count = net.ReadUInt(16)
+		if net.ReadBool() then
+			net.ReadEntity().GetPlayerColor = nil
+		else
+			local count = net.ReadUInt(13)
 
-		for i = 1, count do
-			ent = net.ReadEntity()
-			setColor(ent)
+			for i = 1, count do
+				ent = net.ReadEntity()
+				setColor(ent)
+			end
 		end
-	end)
-
-	net.Receive("noragcoltoclient", function()
-		ent = net.ReadEntity()
-		ent.GetPlayerColor = nil
 	end)
 end
 
@@ -147,12 +143,13 @@ function TOOL:Reload(trace)
 
 	if IsValid(ent) then
 		if ent:IsPlayer() then return false end
+		ent:SetNWVector("stikragdollcolorer")
 		if CLIENT then return true end
 		ent.GetPlayerColor = nil
 		duplicator.ClearEntityModifier(ent, "stikRagdollColor")
-		ent:SetNWVector("stikragdollcolorer")
 		enttbl[ent:EntIndex()] = NULL
-		net.Start("noragcoltoclient")
+		net.Start("ragdolltblclient")
+		net.WriteBit(true)
 		net.WriteEntity(ent)
 		net.Broadcast()
 		setColor()
@@ -170,7 +167,7 @@ function TOOL.BuildCPanel(panel)
 		RunConsoleCommand("ragdollcolorer_g", math.random(0,255))
 		RunConsoleCommand("ragdollcolorer_b", math.random(0,255))
 	end
-	panel:Help("Recolor a ragdoll or prop\'s proxy material")
+	panel:Help("Recolor a ragdoll or prop's proxy material")
 	panel:AddControl("combobox",{
 		menubutton = 1,
 		folder = "ragdollcolorer",
