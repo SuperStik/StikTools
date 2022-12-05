@@ -3,7 +3,7 @@ TOOL.Category = "Construction"
 TOOL.Name = "#tool.physprop.name"
 
 if CLIENT then
-	CreateClientConVar("physprop_mass", "100", true, true, nil, 0, 50000) -- Hack to set min max values
+	CreateClientConVar("physprop_mass", "100", true, true, nil, 1.192092896e-07, 50000) -- Hack to set min max values
 end
 TOOL.ClientConVar[ "gravity_toggle" ] = "1"
 TOOL.ClientConVar[ "material" ] = "metal_bouncy"
@@ -37,12 +37,14 @@ function TOOL:LeftClick( trace )
 	local gravity = self:GetClientNumber( "gravity_toggle" ) ~= 0
 	local material = self:GetClientInfo( "material" )
 	local motion = self:GetClientNumber("motion_toggle") ~= 0
+	local mass = self:GetClientNumber("mass")
 
 	-- Set the properties
 	local owner = self:GetOwner()
 	local phys = ent:GetPhysicsObjectNum(Bone)
 	if IsValid(phys) then
 		phys:EnableMotion(motion)
+		phys:SetMass(mass < 1.192092896e-07 and 1.192092896e-07 or mass) -- Clamping to prevent the engine from crashing
 	end
 	construct.SetPhysProp( owner, ent, Bone, nil, { GravityToggle = gravity, Material = material } )
 
@@ -62,9 +64,11 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:AddControl( "CheckBox", { Label = "#tool.physprop.gravity", Command = "physprop_gravity_toggle" } )
 
-	CPanel:CheckBox("Use Defaults", "physprop_defaults_toggle"):SetEnabled(false)
+	CPanel:CheckBox("Use Defaults", "physprop_defaults_toggle"):SetEnabled(false) -- Need to fix this eventually
 
 	CPanel:CheckBox("Enable Motion", "physprop_motion_toggle")
+
+	CPanel:NumSlider("Mass", "physprop_mass", 1.192092896e-07, 2000, 2)
 
 end
 
