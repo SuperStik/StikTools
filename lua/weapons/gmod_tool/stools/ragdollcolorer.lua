@@ -4,7 +4,8 @@ TOOL.Name = "Ragdoll Color"
 TOOL.ClientConVar["r"] = "62"
 TOOL.ClientConVar["g"] = "88"
 TOOL.ClientConVar["b"] = "106"
-local def_ply_color = Vector(62, 88, 106) / 255
+local def_ply_color = Vector(62, 88, 106)
+def_ply_color:Div(255)
 local enttbl
 
 local function validateEntityTable(tab)
@@ -147,9 +148,8 @@ if CLIENT then
 end
 
 function TOOL:LeftClick(trace)
-	print(trace.Entity)
 	local ent = hook.Call("RagdollColorOverride", STIK, trace.Entity)
-	print(ent)
+
 	if IsValid(ent) then
 		if CLIENT then return true end
 		local color_r = self:GetClientNumber("r")
