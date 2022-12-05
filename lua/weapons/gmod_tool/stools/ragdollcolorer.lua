@@ -1,10 +1,10 @@
+STIK = STIK or {}
 TOOL.Category = "Render"
 TOOL.Name = "Ragdoll Color"
 TOOL.ClientConVar["r"] = "62"
 TOOL.ClientConVar["g"] = "88"
 TOOL.ClientConVar["b"] = "106"
-local def_ply_color = Vector(62, 88, 106)/255
-
+local def_ply_color = Vector(62, 88, 106) / 255
 local enttbl
 
 local function validateEntityTable(tab)
@@ -23,9 +23,11 @@ local function customColor(self)
 	return self:GetNWVector("stikragdollcolorer", def_ply_color)
 end
 
-local function setColor(Entity) -- this function does way too much, but I'm too lazy to fix it
+-- this function does way too much, but I'm too lazy to fix it
+local function setColor(Entity)
 	if IsValid(Entity) then
 		Entity.GetPlayerColor = customColor
+
 		if SERVER then
 			duplicator.StoreEntityModifier(Entity, "stikRagdollColor", {Entity:GetNWVector("stikragdollcolorer", def_ply_color)})
 		end
@@ -37,6 +39,7 @@ local function setColor(Entity) -- this function does way too much, but I'm too 
 	net.Start("ragdolltblclient")
 	net.WriteBit(false)
 	net.WriteUInt(count, 13)
+
 	for k, v in pairs(enttbl) do
 		net.WriteEntity(v)
 	end
@@ -48,8 +51,16 @@ if SERVER then
 	enttbl = {}
 	util.AddNetworkString("ragdolltblclient")
 
-	function RagdollColorEntityTable() -- in case someone wants to be crazy and access the table
+	-- in case someone wants to be crazy and access the table
+	function RagdollColorEntityTable()
 		return enttbl
+	end
+
+	function STIK:RagdollColorOverride(ent)
+		if not ent:IsValid() then return ent end
+		if ent:GetClass() == "prop_effect" then return ent.AttachedEntity end
+
+		return ent
 	end
 
 	hook.Add("PlayerSpawn", "NetworkRagdollColors", function()
@@ -66,8 +77,6 @@ duplicator.RegisterEntityModifier("stikRagdollColor", function(_, ent, data)
 end)
 
 if CLIENT then
-	local ent = NULL
-
 	TOOL.Information = {
 		{
 			name = "left"
@@ -94,22 +103,59 @@ if CLIENT then
 			local count = net.ReadUInt(13)
 
 			for i = 1, count do
-				ent = net.ReadEntity()
-				setColor(ent)
+				setColor(net.ReadEntity())
 			end
 		end
 	end)
+
+	function STIK:RagdollColorOverride(ent)
+		return ent
+	end
+
+	local ConVarsDefault = TOOL:BuildConVarList()
+
+	function TOOL.BuildCPanel(panel)
+		local button = vgui.Create("DButton")
+		button:SetText("Randomize Colors")
+
+		function button:DoClick()
+			RunConsoleCommand("ragdollcolorer_r", math.random(0, 255))
+			RunConsoleCommand("ragdollcolorer_g", math.random(0, 255))
+			RunConsoleCommand("ragdollcolorer_b", math.random(0, 255))
+		end
+
+		panel:Help("Recolor a ragdoll or prop's proxy material")
+
+		panel:AddControl("combobox", {
+			menubutton = 1,
+			folder = "ragdollcolorer",
+			options = {
+				["#preset.default"] = ConVarsDefault
+			},
+			cvars = table.GetKeys(ConVarsDefault)
+		})
+
+		panel:AddControl("color", {
+			label = "Ragdoll color:",
+			red = "ragdollcolorer_r",
+			green = "ragdollcolorer_g",
+			blue = "ragdollcolorer_b"
+		})
+
+		panel:AddPanel(button)
+	end
 end
 
 function TOOL:LeftClick(trace)
-	local ent = trace.Entity
-
+	print(trace.Entity)
+	local ent = hook.Call("RagdollColorOverride", STIK, trace.Entity)
+	print(ent)
 	if IsValid(ent) then
 		if CLIENT then return true end
 		local color_r = self:GetClientNumber("r")
 		local color_g = self:GetClientNumber("g")
 		local color_b = self:GetClientNumber("b")
-		ent:SetNWVector("stikragdollcolorer", Vector(color_r/255, color_g/255, color_b/255))
+		ent:SetNWVector("stikragdollcolorer", Vector(color_r / 255, color_g / 255, color_b / 255))
 		table.insert(enttbl, ent:EntIndex(), ent)
 		setColor(ent)
 
@@ -118,11 +164,12 @@ function TOOL:LeftClick(trace)
 end
 
 function TOOL:RightClick(trace)
-	local ent = trace.Entity
+	local ent = hook.Call("RagdollColorOverride", STIK, trace.Entity)
 	local owner = self:GetOwner()
 
 	if IsValid(ent) then
 		if CLIENT then return true end
+
 		if isfunction(ent.GetPlayerColor) then
 			local vec = ent:GetPlayerColor()
 			vec:Mul(255)
@@ -130,18 +177,19 @@ function TOOL:RightClick(trace)
 			owner:ConCommand("ragdollcolorer_g " .. math.floor(vec.y))
 			owner:ConCommand("ragdollcolorer_b " .. math.floor(vec.z))
 		else
-			owner:ConCommand("ragdollcolorer_r " .. math.floor(def_ply_color.x*255))
-			owner:ConCommand("ragdollcolorer_g " .. math.floor(def_ply_color.y*255))
-			owner:ConCommand("ragdollcolorer_b " .. math.floor(def_ply_color.z*255))
+			owner:ConCommand("ragdollcolorer_r " .. math.floor(def_ply_color.x * 255))
+			owner:ConCommand("ragdollcolorer_g " .. math.floor(def_ply_color.y * 255))
+			owner:ConCommand("ragdollcolorer_b " .. math.floor(def_ply_color.z * 255))
 		end
+
 		return true
 	end
 end
 
 function TOOL:Reload(trace)
-	local ent = trace.Entity
+	local ent = hook.Call("RagdollColorOverride", STIK, trace.Entity)
 
-	if IsValid(ent) then
+	if ent:IsValid() then
 		if ent:IsPlayer() then return false end
 		ent:SetNWVector("stikragdollcolorer")
 		if CLIENT then return true end
@@ -153,32 +201,7 @@ function TOOL:Reload(trace)
 		net.WriteEntity(ent)
 		net.Broadcast()
 		setColor()
+
 		return true
 	end
-end
-
-local ConVarsDefault = TOOL:BuildConVarList()
-
-function TOOL.BuildCPanel(panel)
-	local button = vgui.Create("DButton")
-	button:SetText("Randomize Colors")
-	function button:DoClick()
-		RunConsoleCommand("ragdollcolorer_r", math.random(0,255))
-		RunConsoleCommand("ragdollcolorer_g", math.random(0,255))
-		RunConsoleCommand("ragdollcolorer_b", math.random(0,255))
-	end
-	panel:Help("Recolor a ragdoll or prop's proxy material")
-	panel:AddControl("combobox",{
-		menubutton = 1,
-		folder = "ragdollcolorer",
-		options = {["#preset.default"] = ConVarsDefault},
-		cvars = table.GetKeys(ConVarsDefault)
-	})
-	panel:AddControl("color",{
-		label = "Ragdoll color:",
-		red = "ragdollcolorer_r",
-		green = "ragdollcolorer_g",
-		blue = "ragdollcolorer_b"
-	})
-	panel:AddPanel(button)
 end
