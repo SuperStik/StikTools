@@ -26,7 +26,7 @@ end
 
 -- this function does way too much, but I'm too lazy to fix it
 local function setColor(Entity)
-	if Entity:IsValid() then
+	if IsValid(Entity) then
 		Entity.GetPlayerColor = customColor
 
 		if SERVER then
