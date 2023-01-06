@@ -11,6 +11,7 @@ TOOL.ClientConVar[ "defaults_toggle" ] = "0"
 TOOL.ClientConVar[ "mass" ] = "100"
 TOOL.ClientConVar[ "drag_toggle" ] = "1"
 TOOL.ClientConVar[ "drag" ] = "1"
+TOOL.ClientConVar[ "dragangle" ] = "1"
 TOOL.ClientConVar[ "buoyancy" ] = "0"
 TOOL.ClientConVar[ "rotdamping" ] = "0"
 TOOL.ClientConVar[ "speeddamping" ] = "0"
@@ -42,7 +43,9 @@ function TOOL:LeftClick( trace )
 	local phys = ent:GetPhysicsObjectNum(Bone)
 	if IsValid(phys) then
 		phys:SetMass(mass < 1.192092896e-07 and 1.192092896e-07 or mass) -- Clamping to prevent the engine from crashing
-		phys:EnableDrag(self:GetClientNumber("drag_toggle") ~= 0) -- drag_toggle
+		phys:SetDragCoefficient(self:GetClientNumber("drag")) -- drag
+		phys:SetAngleDragCoefficient(self:GetClientNumber("dragangle")) -- dragangle
+		phys:EnableDrag(self:GetClientNumber("drag_toggle") ~= 0) -- drag_toggle, has to be after drag stuff for some reason
 	end
 	construct.SetPhysProp( owner, ent, Bone, nil, { GravityToggle = gravity, Material = material } )
 
@@ -68,6 +71,12 @@ function TOOL.BuildCPanel( CPanel )
 	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
 
 	CPanel:CheckBox("Enable Drag", "physprop_dragtoggle")
+
+	CPanel:NumSlider("Drag Coefficient:", "physprop_drag", 1, 1000, 0)
+	CPanel:ControlHelp("Modifies how much drag (air resistance) affects the object.")
+
+	CPanel:NumSlider("Angle Drag Coefficient:", "physprop_dragangle", 1, 1000, 0)
+	CPanel:ControlHelp("Sets the amount of drag to apply to a physics object when attempting to rotate.")
 end
 
 list.Set( "PhysicsMaterials", "#physprop.metalbouncy", { physprop_material = "metal_bouncy" } )
