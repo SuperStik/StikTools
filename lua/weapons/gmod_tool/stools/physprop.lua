@@ -8,10 +8,9 @@ end
 TOOL.ClientConVar[ "gravity_toggle" ] = "1"
 TOOL.ClientConVar[ "material" ] = "metal_bouncy"
 TOOL.ClientConVar[ "defaults_toggle" ] = "0"
-TOOL.ClientConVar[ "motion_toggle" ] = "1"
 TOOL.ClientConVar[ "mass" ] = "100"
 TOOL.ClientConVar[ "drag_toggle" ] = "1"
-TOOL.ClientConVar[ "drag" ] = "0"
+TOOL.ClientConVar[ "drag" ] = "1"
 TOOL.ClientConVar[ "buoyancy" ] = "0"
 TOOL.ClientConVar[ "rotdamping" ] = "0"
 TOOL.ClientConVar[ "speeddamping" ] = "0"
@@ -36,15 +35,14 @@ function TOOL:LeftClick( trace )
 	-- Get client's CVars
 	local gravity = self:GetClientNumber( "gravity_toggle" ) ~= 0
 	local material = self:GetClientInfo( "material" )
-	local motion = self:GetClientNumber("motion_toggle") ~= 0
 	local mass = self:GetClientNumber("mass")
 
 	-- Set the properties
 	local owner = self:GetOwner()
 	local phys = ent:GetPhysicsObjectNum(Bone)
 	if IsValid(phys) then
-		phys:EnableMotion(motion)
 		phys:SetMass(mass < 1.192092896e-07 and 1.192092896e-07 or mass) -- Clamping to prevent the engine from crashing
+		phys:EnableDrag(self:GetClientNumber("drag_toggle") ~= 0) -- drag_toggle
 	end
 	construct.SetPhysProp( owner, ent, Bone, nil, { GravityToggle = gravity, Material = material } )
 
@@ -66,11 +64,10 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:CheckBox("Use Defaults", "physprop_defaults_toggle"):SetEnabled(false) -- Need to fix this eventually
 
-	CPanel:CheckBox("Enable Motion", "physprop_motion_toggle")
-
 	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
 	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
 
+	CPanel:CheckBox("Enable Drag", "physprop_dragtoggle")
 end
 
 list.Set( "PhysicsMaterials", "#physprop.metalbouncy", { physprop_material = "metal_bouncy" } )
