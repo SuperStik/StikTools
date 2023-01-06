@@ -4,6 +4,7 @@ TOOL.Name = "#tool.physprop.name"
 
 if CLIENT then
 	CreateClientConVar("physprop_mass", "100", true, true, nil, 1.192092896e-07, 50000) -- Hack to set min max values
+	language.Add("tool.physprop.right", "Copy Physical Properties from an object")
 else -- For some reason the physgun stuff breaks buoyancy, so I made a really ugly hack to fix that
 	local function BuoyancyHack(_, ent)
 		if ent.BuoyancyHack then
@@ -30,7 +31,7 @@ TOOL.ClientConVar[ "buoyancy" ] = "0.5"
 TOOL.ClientConVar[ "speeddamping" ] = "0"
 TOOL.ClientConVar[ "rotdamping" ] = "0"
 
-TOOL.Information = { { name = "left" } }
+TOOL.Information = { { name = "left" }, {name = "right"} }
 
 function TOOL:LeftClick( trace )
 
@@ -75,6 +76,27 @@ function TOOL:LeftClick( trace )
 
 end
 
+function TOOL:RightClick(tr)
+	local ent = tr.Entity
+	if not IsValid(ent) then return false end
+	if CLIENT then return true end
+	local Bone = tr.PhysicsBone
+	if not util.IsValidPhysicsObject(ent, Bone) then return false end
+	local phys = ent:GetPhysicsObjectNum(Bone)
+	local owner = self:GetOwner()
+	owner:ConCommand("physprop_material " .. phys:GetMaterial())
+	owner:ConCommand("physprop_mass " .. phys:GetMass())
+	owner:ConCommand("physprop_gravity_toggle " .. (phys:IsGravityEnabled() and "1" or "0"))
+	owner:ConCommand("physprop_drag_toggle " .. (phys:IsDragEnabled() and "1" or "0"))
+	if ent.BuoyancyHack then
+		owner:ConCommand("physprop_buoyancy " .. ent.BuoyancyHack[Bone])
+	end
+	speed, rot = phys:GetDamping()
+	owner:ConCommand("physprop_speeddamping " .. speed)
+	owner:ConCommand("physprop_rotdamping " .. rot)
+	return true
+end
+
 local ConVarsDefault = TOOL:BuildConVarList()
 
 function TOOL.BuildCPanel( CPanel )
@@ -87,7 +109,7 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:CheckBox("Use Defaults", "physprop_defaults_toggle"):SetEnabled(false) -- Need to fix this eventually
 
-	CPanel:CheckBox("Enable Drag", "physprop_dragtoggle")
+	CPanel:CheckBox("Enable Drag", "physprop_drag_toggle")
 
 	CPanel:NumSlider("Drag Coefficient:", "physprop_drag", 1, 1000, 0)
 	CPanel:ControlHelp("Modifies how much drag (air resistance) affects the object.")
