@@ -19,6 +19,29 @@ else -- For some reason the physgun stuff breaks buoyancy, so I made a really ug
 	hook.Add("GravGunOnDropped", "BuoyancyHack", BuoyancyHack)
 	hook.Add("OnPlayerPhysicsDrop", "BuoyancyHack", BuoyancyHack)
 	hook.Add("PhysgunDrop", "BuoyancyHack", BuoyancyHack)
+	construct = construct or {}
+	function construct.SetPhysProp2(ply, ent, boneID, bone, data)
+		if not IsValid(bone) then
+			bone = ent:GetPhysicsObjectNum(boneID)
+			if not IsValid(bone) then
+				Msg("SetPhysProp2: Error applying attributes to invalid physics object!\n")
+				return
+			end
+		end
+		PrintTable(data)
+		bone:SetMass(data.Mass < 1.192092896e-07 and 1.192092896e-07 or data.Mass) -- Clamping to prevent the engine from crashing
+		bone:SetDragCoefficient(data.Drag)
+		bone:SetAngleDragCoefficient(data.AngleDrag)
+		bone:EnableDrag(data.DragToggle) -- Has to be after drag stuff for some reason
+		bone:SetBuoyancyRatio(data.Buoyancy)
+		bone:SetDamping(data.LinearDamping, data.AngularDamping)
+		-- HACK HACK
+		ent.BuoyancyHack = ent.BuoyancyHack or {}
+		ent.BuoyancyHack[boneID] = data.Buoyancy
+		duplicator.StoreBoneModifier(ent, boneID, "physprops2", data)
+	end
+
+	duplicator.RegisterBoneModifier("physprops2", construct.SetPhysProp2)
 end
 TOOL.ClientConVar[ "gravity_toggle" ] = "1"
 TOOL.ClientConVar[ "material" ] = "metal_bouncy"
@@ -52,22 +75,25 @@ function TOOL:LeftClick( trace )
 	local gravity = self:GetClientNumber( "gravity_toggle" ) ~= 0
 	local material = self:GetClientInfo( "material" )
 	local mass = self:GetClientNumber("mass")
+	local drag = self:GetClientNumber("drag")
+	local dragangle = self:GetClientNumber("dragangle")
+	local drag_toggle = self:GetClientNumber("drag_toggle") ~= 0
 	local buoyancy = self:GetClientNumber("buoyancy")
+	local speeddamping = self:GetClientNumber("speeddamping")
+	local rotdamping = self:GetClientNumber("rotdamping")
 
 	-- Set the properties
 	local owner = self:GetOwner()
 	local phys = ent:GetPhysicsObjectNum(Bone)
-	if IsValid(phys) then
-		phys:SetMass(mass < 1.192092896e-07 and 1.192092896e-07 or mass) -- Clamping to prevent the engine from crashing
-		phys:SetDragCoefficient(self:GetClientNumber("drag")) -- drag
-		phys:SetAngleDragCoefficient(self:GetClientNumber("dragangle")) -- dragangle
-		phys:EnableDrag(self:GetClientNumber("drag_toggle") ~= 0) -- drag_toggle, has to be after drag stuff for some reason
-		phys:SetBuoyancyRatio(buoyancy)
-		phys:SetDamping(self:GetClientNumber("speeddamping"), self:GetClientNumber("rotdamping")) -- damping
-		-- HACK HACK
-		ent.BuoyancyHack = ent.BuoyancyHack or {}
-		ent.BuoyancyHack[Bone] = buoyancy
-	end
+	construct.SetPhysProp2(owner, ent, Bone, phys, {
+		Mass = mass,
+		Drag = drag,
+		AngleDrag = dragangle,
+		DragToggle = drag_toggle,
+		Buoyancy = buoyancy,
+		LinearDamping = speeddamping,
+		AngularDamping = rotdamping
+	})
 	construct.SetPhysProp( owner, ent, Bone, phys, { GravityToggle = gravity, Material = material } )
 
 	DoPropSpawnedEffect( ent )
@@ -114,11 +140,11 @@ function TOOL.BuildCPanel( CPanel )
 	CPanel:NumSlider("Drag Coefficient:", "physprop_drag", 1, 1000, 0)
 	CPanel:ControlHelp("Modifies how much drag (air resistance) affects the object.")
 
-	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
-	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
-
 	CPanel:NumSlider("Angle Drag Coefficient:", "physprop_dragangle", 1, 1000, 0)
 	CPanel:ControlHelp("Sets the amount of drag to apply to a physics object when attempting to rotate.")
+
+	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
+	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
 
 	CPanel:NumSlider("Buoyancy Ratio:", "physprop_buoyancy", 0, 1, 2)
 	CPanel:ControlHelp("Sets the buoyancy ratio of the physics object (How well it floats in water).")
