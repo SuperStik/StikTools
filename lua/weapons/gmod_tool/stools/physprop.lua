@@ -8,7 +8,7 @@ else -- For some reason the physgun stuff breaks buoyancy, so I made a really ug
 	local function BuoyancyHack(_, ent)
 		if ent.BuoyancyHack then
 			for k, v in pairs(ent.BuoyancyHack) do
-		6		timer.Simple(0, function()
+				timer.Simple(0, function()
 					ent:GetPhysicsObjectNum(k):SetBuoyancyRatio(v)
 				end)
 			end
