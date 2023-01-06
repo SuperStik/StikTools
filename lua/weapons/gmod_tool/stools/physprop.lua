@@ -49,7 +49,7 @@ end
 
 TOOL.ClientConVar["gravity_toggle"] = "1"
 TOOL.ClientConVar["material"] = "metal_bouncy"
-TOOL.ClientConVar["defaults_toggle"] = "0"
+TOOL.ClientConVar["advanced_toggle"] = "0"
 TOOL.ClientConVar["mass"] = "100"
 TOOL.ClientConVar["drag_toggle"] = "1"
 TOOL.ClientConVar["drag"] = "1"
@@ -91,15 +91,17 @@ function TOOL:LeftClick(trace)
 	local owner = self:GetOwner()
 	local phys = ent:GetPhysicsObjectNum(Bone)
 
-	construct.SetPhysProp2(owner, ent, Bone, phys, {
-		Mass = mass,
-		Drag = drag,
-		AngleDrag = dragangle,
-		DragToggle = drag_toggle,
-		Buoyancy = buoyancy,
-		LinearDamping = speeddamping,
-		AngularDamping = rotdamping
-	})
+	if self:GetClientNumber("advanced_toggle") ~= 0 then
+		construct.SetPhysProp2(owner, ent, Bone, phys, {
+			Mass = mass,
+			Drag = drag,
+			AngleDrag = dragangle,
+			DragToggle = drag_toggle,
+			Buoyancy = buoyancy,
+			LinearDamping = speeddamping,
+			AngularDamping = rotdamping
+		})
+	end
 
 	construct.SetPhysProp(owner, ent, Bone, phys, {
 		GravityToggle = gravity,
@@ -157,18 +159,15 @@ function TOOL.BuildCPanel(CPanel)
 		Command = "physprop_gravity_toggle"
 	})
 
-	CPanel:CheckBox("Use Defaults", "physprop_defaults_toggle"):SetEnabled(false) -- Need to fix this eventually
-	CPanel:CheckBox("Enable Drag", "physprop_drag_toggle")
-	CPanel:NumSlider("Drag Coefficient:", "physprop_drag", 1, 1000, 0)
-	CPanel:ControlHelp("Modifies how much drag (air resistance) affects the object.")
-	CPanel:NumSlider("Angle Drag Coefficient:", "physprop_dragangle", 1, 1000, 0)
-	CPanel:ControlHelp("Sets the amount of drag to apply to a physics object when attempting to rotate.")
-	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
-	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
-	CPanel:NumSlider("Buoyancy Ratio:", "physprop_buoyancy", 0, 1, 2)
-	CPanel:ControlHelp("Sets the buoyancy ratio of the physics object (How well it floats in water).")
-	CPanel:NumSlider("Linear Damping:", "physprop_speeddamping", 0, 100, 2)
-	CPanel:NumSlider("Angular Damping:", "physprop_rotdamping", 0, 100, 2)
+	local check = CPanel:CheckBox("Advanced Mode", "physprop_advanced_toggle")
+
+	function check:OnChange(bool)
+		for k, v in ipairs(self.Panels) do
+			v:SetEnabled(bool)
+		end
+	end
+
+	check.Panels = {CPanel:CheckBox("Enable Drag", "physprop_drag_toggle"), CPanel:NumSlider("Drag Coefficient:", "physprop_drag", 1, 1000, 0), CPanel:ControlHelp("Modifies how much drag (air resistance) affects the object."), CPanel:NumSlider("Angle Drag Coefficient:", "physprop_dragangle", 1, 1000, 0), CPanel:ControlHelp("Sets the amount of drag to apply to a physics object when attempting to rotate."), CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2), CPanel:ControlHelp("Sets the current mass of the physics object in kilograms."), CPanel:NumSlider("Buoyancy Ratio:", "physprop_buoyancy", 0, 1, 2), CPanel:ControlHelp("Sets the buoyancy ratio of the physics object (How well it floats in water)."), CPanel:NumSlider("Linear Damping:", "physprop_speeddamping", 0, 100, 2), CPanel:NumSlider("Angular Damping:", "physprop_rotdamping", 0, 100, 2),}
 end
 
 list.Set("PhysicsMaterials", "#physprop.metalbouncy", {
