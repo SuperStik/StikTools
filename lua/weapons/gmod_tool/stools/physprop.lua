@@ -86,13 +86,13 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:CheckBox("Use Defaults", "physprop_defaults_toggle"):SetEnabled(false) -- Need to fix this eventually
 
-	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
-	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
-
 	CPanel:CheckBox("Enable Drag", "physprop_dragtoggle")
 
 	CPanel:NumSlider("Drag Coefficient:", "physprop_drag", 1, 1000, 0)
 	CPanel:ControlHelp("Modifies how much drag (air resistance) affects the object.")
+
+	CPanel:NumSlider("Mass:", "physprop_mass", 1.192092896e-07, 2000, 2)
+	CPanel:ControlHelp("Sets the current mass of the physics object in kilograms.")
 
 	CPanel:NumSlider("Angle Drag Coefficient:", "physprop_dragangle", 1, 1000, 0)
 	CPanel:ControlHelp("Sets the amount of drag to apply to a physics object when attempting to rotate.")
