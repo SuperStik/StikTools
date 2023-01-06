@@ -4,6 +4,20 @@ TOOL.Name = "#tool.physprop.name"
 
 if CLIENT then
 	CreateClientConVar("physprop_mass", "100", true, true, nil, 1.192092896e-07, 50000) -- Hack to set min max values
+else -- For some reason the physgun stuff breaks buoyancy, so I made a really ugly hack to fix that
+	local function BuoyancyHack(_, ent)
+		if ent.BuoyancyHack then
+			for k, v in pairs(ent.BuoyancyHack) do
+				timer.Simple(0, function() 
+					ent:GetPhysicsObjectNum(k):SetBuoyancyRatio(v)
+				end)
+			end
+		end
+	end
+
+	hook.Add("GravGunOnDropped", "BuoyancyHack", BuoyancyHack)
+	hook.Add("OnPlayerPhysicsDrop", "BuoyancyHack", BuoyancyHack)
+	hook.Add("PhysgunDrop", "BuoyancyHack", BuoyancyHack)
 end
 TOOL.ClientConVar[ "gravity_toggle" ] = "1"
 TOOL.ClientConVar[ "material" ] = "metal_bouncy"
@@ -12,7 +26,7 @@ TOOL.ClientConVar[ "mass" ] = "100"
 TOOL.ClientConVar[ "drag_toggle" ] = "1"
 TOOL.ClientConVar[ "drag" ] = "1"
 TOOL.ClientConVar[ "dragangle" ] = "1"
-TOOL.ClientConVar[ "buoyancy" ] = "0"
+TOOL.ClientConVar[ "buoyancy" ] = "0.5"
 TOOL.ClientConVar[ "rotdamping" ] = "0"
 TOOL.ClientConVar[ "speeddamping" ] = "0"
 
@@ -37,6 +51,7 @@ function TOOL:LeftClick( trace )
 	local gravity = self:GetClientNumber( "gravity_toggle" ) ~= 0
 	local material = self:GetClientInfo( "material" )
 	local mass = self:GetClientNumber("mass")
+	local buoyancy = self:GetClientNumber("buoyancy")
 
 	-- Set the properties
 	local owner = self:GetOwner()
@@ -46,8 +61,12 @@ function TOOL:LeftClick( trace )
 		phys:SetDragCoefficient(self:GetClientNumber("drag")) -- drag
 		phys:SetAngleDragCoefficient(self:GetClientNumber("dragangle")) -- dragangle
 		phys:EnableDrag(self:GetClientNumber("drag_toggle") ~= 0) -- drag_toggle, has to be after drag stuff for some reason
+		phys:SetBuoyancyRatio(buoyancy)
+		-- HACK HACK
+		ent.BuoyancyHack = ent.BuoyancyHack or {}
+		ent.BuoyancyHack[Bone] = buoyancy
 	end
-	construct.SetPhysProp( owner, ent, Bone, nil, { GravityToggle = gravity, Material = material } )
+	construct.SetPhysProp( owner, ent, Bone, phys, { GravityToggle = gravity, Material = material } )
 
 	DoPropSpawnedEffect( ent )
 
@@ -77,6 +96,10 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:NumSlider("Angle Drag Coefficient:", "physprop_dragangle", 1, 1000, 0)
 	CPanel:ControlHelp("Sets the amount of drag to apply to a physics object when attempting to rotate.")
+
+	CPanel:NumSlider("Buoyancy Ratio:", "physprop_buoyancy", 0, 1, 2)
+	CPanel:ControlHelp("Sets the buoyancy ratio of the physics object (How well it floats in water).")
+
 end
 
 list.Set( "PhysicsMaterials", "#physprop.metalbouncy", { physprop_material = "metal_bouncy" } )
