@@ -31,7 +31,6 @@ else -- For some reason the physgun stuff breaks buoyancy, so I made a really ug
 			end
 		end
 
-		PrintTable(data)
 		bone:SetMass(data.Mass < 1.192092896e-07 and 1.192092896e-07 or data.Mass) -- Clamping to prevent the engine from crashing
 		bone:SetDragCoefficient(data.Drag)
 		bone:SetAngleDragCoefficient(data.AngleDrag)
@@ -116,6 +115,7 @@ end
 function TOOL:RightClick(tr)
 	local ent = tr.Entity
 	if not IsValid(ent) then return false end
+	if tr.Entity:IsPlayer() or tr.Entity:IsWorld() then return false end
 	if CLIENT then return true end
 	local Bone = tr.PhysicsBone
 	if not util.IsValidPhysicsObject(ent, Bone) then return false end
