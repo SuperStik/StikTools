@@ -27,8 +27,8 @@ TOOL.ClientConVar[ "drag_toggle" ] = "1"
 TOOL.ClientConVar[ "drag" ] = "1"
 TOOL.ClientConVar[ "dragangle" ] = "1"
 TOOL.ClientConVar[ "buoyancy" ] = "0.5"
-TOOL.ClientConVar[ "rotdamping" ] = "0"
 TOOL.ClientConVar[ "speeddamping" ] = "0"
+TOOL.ClientConVar[ "rotdamping" ] = "0"
 
 TOOL.Information = { { name = "left" } }
 
@@ -62,6 +62,7 @@ function TOOL:LeftClick( trace )
 		phys:SetAngleDragCoefficient(self:GetClientNumber("dragangle")) -- dragangle
 		phys:EnableDrag(self:GetClientNumber("drag_toggle") ~= 0) -- drag_toggle, has to be after drag stuff for some reason
 		phys:SetBuoyancyRatio(buoyancy)
+		phys:SetDamping(self:GetClientNumber("speeddamping"), self:GetClientNumber("rotdamping")) -- damping
 		-- HACK HACK
 		ent.BuoyancyHack = ent.BuoyancyHack or {}
 		ent.BuoyancyHack[Bone] = buoyancy
@@ -99,6 +100,9 @@ function TOOL.BuildCPanel( CPanel )
 
 	CPanel:NumSlider("Buoyancy Ratio:", "physprop_buoyancy", 0, 1, 2)
 	CPanel:ControlHelp("Sets the buoyancy ratio of the physics object (How well it floats in water).")
+
+	CPanel:NumSlider("Linear Damping:", "physprop_speeddamping", 0, 100, 2)
+	CPanel:NumSlider("Angular Damping:", "physprop_rotdamping", 0, 100, 2)
 
 end
 
